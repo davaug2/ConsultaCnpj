@@ -1,0 +1,103 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+@section scripts
+{
+    <script type="text/javascript">
+    $(function() {
+        $("#cnpj").blur(function (e) {
+            e.preventDefault();
+            var cnpj = $("#cnpj");
+            if (cnpj.val() != "" && cnpj.val().length == 14) {
+                $.ajax({
+                    type: "GET",
+                    url: "/Utils/RFBGetCaptcha",
+                    dataType: "json",
+                    data: { document: "00000000000000" },
+                    success: function (response) {
+                        $("#imagemCpf").html("<img id='imgCaptch' src='" + response.img + "' />");
+                    }
+                });
+                $("#divCapCNPJ").dialog({
+                    title: "Validação de CNPJ",
+                    modal: true,
+                    width: 450,
+                    buttons: {
+                        Validar: function () {
+                            if ($("#CodigoCnpj").val() == undefined || $("#CodigoCnpj").val() === "") {
+                                $("#erros").addClass("alert alert-danger").html("Informe o código");
+                                $("#CodigoCnpj").focus();
+                                return;
+                            }
+                            $.ajax({
+                                type: "GET",
+                                url: "/Utils/RFBGetData",
+                                data: { cnpj: cnpj.val(), captcha: $("#CodigoCnpj").val() },
+                                dataType: "json",
+                                success: function (ret) {
+                                    if (ret.ret) {
+                                        $("#RazaoSocial").val(ret.dados.RazaoSocial);
+                                        $("#Fantasia").val(ret.dados.NomeFantasia);
+                                        $("#Cep").val(ret.dados.Cep.replace(".", ""));
+                                        $("#Logradouro").val(ret.dados.Logradouro);
+                                        $("#Numero").val(ret.dados.Numero);
+                                        $("#Complemento").val(ret.dados.Complemento);
+                                        $("#Bairro").val(ret.dados.Bairro);
+                                        $("#CnaePrincipal").val(ret.dados.CnaePrincipal);
+                                        $("#CnaeSecundario").val(ret.dados.CnaeSecundario);
+                                        $("#NaturezaJuridica").val(ret.dados.NaturezaJuridica);
+                                        $("#Estado").val(ret.dados.Estado);
+                                        $("#Cidade").val(ret.dados.Cidade);
+                                        $("#CodigoCnpj").val("");
+                                        $.get("/Utils/DeteleFile", { patch: $("#imgCaptch").attr("src") }, function () { }, "json");
+                                        $('#divCapCNPJ').dialog('close');
+                                    } else {
+                                        $("#erros").addClass("alert alert-danger").html(ret.mensagem);
+                                    }
+                                }
+                            });
+                        },
+                        Cancelar: function () {
+                            $(this).dialog("close");
+                            $.get("/Utils/DeteleFile", { patch: $("#imgCaptch").attr("src") }, function () { }, "json");
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>
+}
+<div id="divCapCNPJ" style="display: none">
+    <div id="erros"></div>
+    <div class="col-sm-12">
+        <div class="form-group" id="imagemCpf">
+        </div>
+    </div>
+    <div class="col-sm-12">
+        <div class="form-group">
+            <label>
+                Código
+            </label>
+            <input type="text" id="CodigoCnpj" class="form-control" maxlength="6" placeholder="Informe o código acima" />
+        </div>
+    </div>
+</div>
+<div class="jumbotron">
+    <div class="col-md-12">
+        <p><input type="tel" id="cnpj" placeholder="CPNJ" class="form-control" max="14"/></p>
+        <p><input type="text" id="RazaoSocial" placeholder="Razão Social" class="form-control" /></p>
+        <p><input type="text" id="Fantasia" placeholder="Nome de Fantasia" class="form-control" /></p>
+        <p><input type="text" id="Cep" placeholder="Cep" class="form-control" /></p>
+        <p><input type="text" id="Logradouro" placeholder="Logradouro" class="form-control" /></p>
+        <p><input type="text" id="Numero" placeholder="Número" class="form-control" /></p>
+        <p><input type="text" id="Complemento" placeholder="Complemento" class="form-control" /></p>
+        <p><input type="text" id="Bairro" placeholder="Bairro" class="form-control"/></p>
+        <p><input type="text" id="Estado" placeholder="Estado" class="form-control" /></p>
+        <p><input type="text" id="Cidade" placeholder="Cidade" class="form-control" /></p>
+        <p><input type="text" id="CnaePrincipal" placeholder="CnaePrincipal" class="form-control" /></p>
+        <p><input type="text" id="CnaeSecundario" placeholder="CnaeSecundario" class="form-control" /></p>
+        <p><input type="text" id="NaturezaJuridica" placeholder="NaturezaJuridica" class="form-control" /></p>
+    </div>
+    
+</div>
